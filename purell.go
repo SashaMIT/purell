@@ -450,7 +450,9 @@ func normalizedString(u *url.URL) string {
 				s = s[2:]
 			}
 		}
-	} else if u.User == nil {
+	} else if u.User == nil && !strings.EqualFold(u.Scheme, "mailto") {
+		// mailto has no authority. Inserting "//" turns mailto:?body=foo
+		// into mailto://?body=foo, which addresses the message to "//".
 		prefix := u.Scheme + ":"
 		if strings.HasPrefix(s, prefix) && !strings.HasPrefix(s, prefix+"//") {
 			s = prefix + "//" + s[len(prefix):]

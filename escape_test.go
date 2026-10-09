@@ -56,15 +56,27 @@ func TestNormalizeKeepsPurellExtraUserinfoCharactersUnescaped(t *testing.T) {
 	}
 }
 
-func TestNormalizeKeepsPurellNonAuthoritySchemePathRendering(t *testing.T) {
-	got, err := NormalizeURLString("mailto:/webmaster@golang.org", FlagsSafe)
-	if err != nil {
-		t.Fatalf("parse error: %s", err)
+func TestNormalizeLeavesMailtoWithoutAuthority(t *testing.T) {
+	tests := []struct {
+		in   string
+		want string
+	}{
+		{"mailto:?body=foo", "mailto:?body=foo"},
+		{"MAILTO:?body=foo", "mailto:?body=foo"},
+		{"mailto:", "mailto:"},
+		{"mailto:/webmaster@golang.org", "mailto:/webmaster@golang.org"},
+		{"mailto:user@example.com", "mailto:user@example.com"},
+		{"mailto:user@example.com?subject=hi", "mailto:user@example.com?subject=hi"},
 	}
 
-	const want = "mailto:///webmaster@golang.org"
-	if got != want {
-		t.Fatalf("NormalizeURLString() = %q, want %q", got, want)
+	for _, tt := range tests {
+		got, err := NormalizeURLString(tt.in, FlagsSafe)
+		if err != nil {
+			t.Fatalf("NormalizeURLString(%q) error: %s", tt.in, err)
+		}
+		if got != tt.want {
+			t.Errorf("NormalizeURLString(%q) = %q, want %q", tt.in, got, tt.want)
+		}
 	}
 }
 
@@ -74,7 +86,6 @@ func TestNormalizeKeepsPurellEmptyHostSchemeRendering(t *testing.T) {
 		want string
 	}{
 		{"file:", "file://"},
-		{"mailto:", "mailto://"},
 		{"file:?q", "file://?q"},
 		{"file:#frag", "file://#frag"},
 	}
